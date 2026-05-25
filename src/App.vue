@@ -2,7 +2,7 @@
 
 import CadastroColaboradores from './components/CadastroColaboradores.vue';
 import CadastroUsuarios from './components/CadastroUsuarios.vue';
-import LayoutListagem from './components/CardColaborador.vue';
+import AddPonto from './components/AddPonto.vue';
 
 import { ref } from 'vue'
 
@@ -11,7 +11,7 @@ export default {
   components: {
     CadastroColaboradores,
     CadastroUsuarios,
-    LayoutListagem
+    AddPonto,
   },
 
   data() {
@@ -19,7 +19,8 @@ export default {
       isVisible0: false,
       isVisible1: false,
       isVisible2: false,
-      isVisible3: false
+      isVisible3: false,
+      isVisiblePonto: false,
     }
   },
 
@@ -27,11 +28,19 @@ export default {
     mostrarUsuario() {
       this.isVisible1 = true
       this.isVisible2 = false
+      this.isVisiblePonto = false
     },
 
     mostrarColaborador() {
       this.isVisible1 = false
       this.isVisible2 = true
+      this.isVisiblePonto = false
+    },
+
+    mostrarPonto() {
+      this.isVisible1 = false
+      this.isVisible2 = false
+      this.isVisiblePonto = true
     }
   }
 
@@ -51,7 +60,7 @@ export default {
         <button type="button" class="btn btn-primary btn-lg" @click="isVisible3 = !isVisible3">Login</button>
       </div>
       <div class="col-md-4">
-        <button type="button" class="btn btn-primary btn-lg"><i class="bi bi-search"></i>Buscar</button>
+        <button type="button" class="btn btn-primary btn-lg" @click="mostrarPonto"><i class="bi bi-search"></i>Pontos</button>
       </div>
     </div>
 
@@ -69,9 +78,12 @@ export default {
 
   <CadastroUsuarios v-show="isVisible1" />
   <CadastroColaboradores v-show="isVisible2" />
+  <AddPonto v-show="isVisiblePonto" />
 
   
   
 </template>
 
-<style scoped></style>
+<style scoped>
+
+</style>
