@@ -65,6 +65,8 @@ async function CadastrarColab() {
     } catch (error) {
 
         console.error(error)
+        console.log('Status:', error.response?.status)
+        console.log('Dados:', error.response?.data)
 
         alert('Erro ao cadastrar colaborador')
 

@@ -1,4 +1,5 @@
 const express = require('express')
+const PDFDocument = require('pdfkit')
 const cors = require('cors')
 const db = require('./db')
 require('dotenv').config()
@@ -9,7 +10,7 @@ app.use(cors())
 app.use(express.json())
 
 // INSERE NOVO USUARIO OU NOVO COLABORADOR, A DEPENDER DA VARIÁVEL 'TIPO' QUE O DEFINE,
-// E QUE DETERMINA SE POSSUIRÁ PONTOS CADASTRADOS
+// E QUE DETERMINA SE POSSUIRÁ apontamentos CADASTRADOS
 app.post('/cadastro', (req, res) => {
 
     const {
@@ -46,8 +47,8 @@ app.post('/cadastro', (req, res) => {
         
         sql = `
             INSERT INTO colaboradores
-            (nome,email,cpf,idade,senha,tipo,pontos)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            (nome,email,cpf,idade,senha,tipo)
+            VALUES (?, ?, ?, ?, ?, ?)
         `
         
         valores = [
@@ -56,8 +57,7 @@ app.post('/cadastro', (req, res) => {
             cpf,
             idade,
             senha,
-            tipo,
-            JSON.stringify([])
+            tipo
         ]
     } else {
 
@@ -83,7 +83,6 @@ app.post('/cadastro', (req, res) => {
     )
 })
 
-
 //BUSCA TODOS OS USUÁRIOS CADASTRADOS
 app.get('/usuarios', (req, res) => {
 
@@ -103,8 +102,25 @@ app.get('/usuarios', (req, res) => {
 // RETORNA TODOS OS COLABORADORES CADASTRADOS
 app.get('/colaboradores', (req, res) => {
 
+    const { inicio, fim } = req.query
+
+    const sql = `
+        SELECT
+            c.id,
+            c.nome,
+            c.email,
+            c.cpf,
+            a.data_hora,
+            a.descricao
+        FROM colaboradores c
+        LEFT JOIN apontamentos a
+            ON c.id = a.colaborador_id
+        WHERE (? IS NULL OR a.data_hora >= ?)
+        AND (? IS NULL OR a.data_hora <= ?)`
+
     db.query(
-        'SELECT * FROM colaboradores',
+        sql,
+        [inicio, inicio, fim, fim],
         (err, result) => {
 
             if(err){
@@ -116,30 +132,14 @@ app.get('/colaboradores', (req, res) => {
     )
 })
 
-// RETORNA TODOS OS COLABORADORES CADASTRADOS
-app.get('/colaborador', (req, res) => {
-
-    db.query(
-        'SELECT * FROM colaboradores',
-        (err, result) => {
-
-            if(err){
-                return res.status(500).json(err)
-            }
-
-            res.json(result)
-        }
-    )
-})
-
-app.get('/pontos/:colaboradorId', (req, res) => {
+app.get('/apontamentos/:colaboradorId', (req, res) => {
 
     const colaboradorId = req.params.colaboradorId
 
     db.query(
         `
         SELECT *
-        FROM pontos
+        FROM apontamentos
         WHERE colaborador_id = ?
         ORDER BY data_hora DESC
         `,
@@ -155,8 +155,123 @@ app.get('/pontos/:colaboradorId', (req, res) => {
     )
 })
 
-// RETORNA TODOS OS PONTOS ADICIONADOS
-app.post('/ponto', (req, res) => {
+app.get('/relatorio', async (req, res) => {
+
+    const { inicio, fim } = req.query
+
+    const sql = `
+        SELECT
+            c.id,
+            c.nome,
+            c.email,
+            c.cpf,
+            a.data_hora,
+            a.descricao
+        FROM colaboradores c
+        LEFT JOIN apontamentos a
+            ON c.id = a.colaborador_id
+        WHERE (? IS NULL OR a.data_hora >= ?)
+        AND (? IS NULL OR a.data_hora <= ?)
+        ORDER BY c.nome, a.data_hora
+    `
+
+    db.query(
+        sql,
+        [inicio, inicio, fim, fim],
+        (err, result) => {
+
+            if(err){
+                return res.status(500).json(err)
+            }
+
+            const doc = new PDFDocument()
+
+            res.setHeader(
+                'Content-Type',
+                'application/pdf'
+            )
+
+            res.setHeader(
+                'Content-Disposition',
+                'attachment; filename=relatorio-geral.pdf'
+            )
+
+            doc.pipe(res)
+
+            doc.fontSize(20)
+            doc.text(
+                'RELATÓRIO GERAL DE APONTAMENTOS',
+                {
+                    align: 'center'
+                }
+            )
+
+            doc.moveDown()
+
+            doc.fontSize(12)
+
+            doc.text(
+                `Período: ${inicio} até ${fim}`
+            )
+
+            doc.moveDown()
+
+            let colaboradorAtual = null
+
+            result.forEach(registro => {
+
+                if(colaboradorAtual !== registro.id){
+
+                    colaboradorAtual = registro.id
+
+                    doc.moveDown()
+
+                    doc.fontSize(14)
+                    doc.text(
+                        `Colaborador: ${registro.nome}`
+                    )
+
+                    doc.fontSize(11)
+                    doc.text(
+                        `Email: ${registro.email}`
+                    )
+
+                    doc.text(
+                        `CPF: ${registro.cpf}`
+                    )
+
+                    doc.moveDown()
+                }
+
+                if(registro.data_hora){
+
+                    const dataFormatada =
+                        new Date(
+                            registro.data_hora
+                        ).toLocaleString('pt-BR')
+
+                    doc.text(
+                        `${dataFormatada} - ${registro.descricao}`
+                    )
+
+                }
+
+            })
+
+            doc.moveDown()
+
+            doc.text(
+                `Total de registros: ${result.length}`
+            )
+
+            doc.end()
+
+        }
+    )
+
+})
+
+app.post('/cadastroponto', (req, res) => {
 
     const {
         colaborador_id,
@@ -165,7 +280,7 @@ app.post('/ponto', (req, res) => {
     } = req.body
 
     const sql = `
-        INSERT INTO pontos
+        INSERT INTO apontamentos
         (
             colaborador_id,
             data_hora,
@@ -189,7 +304,6 @@ app.post('/ponto', (req, res) => {
         }
     )
 })
-console.log('Arquivo server.js carregado')
 
 app.listen(3000, () => {
     console.log('API rodando')

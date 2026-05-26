@@ -4,7 +4,6 @@ export default class Colaborador {
         email = '',
         cpf = '',
         idade = '',
-        pontos = {},
         senha = '',
         tipo = 'colaborador',
     ){
@@ -12,7 +11,6 @@ export default class Colaborador {
         this.email = email
         this.cpf = cpf
         this.idade = idade
-        this.pontos = pontos
         this.senha = senha
         this.tipo = tipo
 

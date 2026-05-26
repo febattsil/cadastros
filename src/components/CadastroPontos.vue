@@ -7,9 +7,10 @@ import Ponto from '@/models/Ponto'
 
 const colaborador_id = ref('')
 const data_hora = ref('')
+const tipo = ref('apontamento')
 const descricao = ref('')
 
-async function AddPonto() {
+async function CadastroPonto() {
 
     if (!colaborador_id.value) {
         alert('Informe o ID do colaborador')
@@ -25,16 +26,18 @@ async function AddPonto() {
 
     novo_ponto.colaborador_id = colaborador_id.value
     novo_ponto.data_hora = data_hora.value
+    novo_ponto.tipo = tipo.value
     novo_ponto.descricao = descricao.value
 
     try {
 
         const response = await axios.post(
-            'http://localhost:3000/ponto',
+            'http://localhost:3000/cadastroponto',
             novo_ponto
         )
 
         console.log(response.data)
+        
 
         alert('Ponto registrado com sucesso!')
 
@@ -45,6 +48,8 @@ async function AddPonto() {
     } catch (error) {
 
         console.error(error)
+        console.log('Status:', error.response?.status)
+        console.log('Dados:', error.response?.data)
 
         alert('Erro ao registrar ponto')
 
@@ -66,7 +71,7 @@ async function AddPonto() {
 
             <div class="card-body">
 
-                <form @submit.prevent="AddPonto">
+                <form @submit.prevent="CadastroPonto">
 
                     <div class="mb-3">
                         <label class="form-label">

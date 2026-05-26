@@ -1,6 +1,8 @@
 <script setup>
 
 import { defineProps } from 'vue'
+import { ref, onMounted } from 'vue'
+import axios from 'axios'
 
 const props = defineProps({
     colaborador: {
@@ -9,18 +11,16 @@ const props = defineProps({
     }
 })
 
-const pontos = ref([])
+const apontamentos = ref([])
 
-async function carregarPontos(){
+async function carregarapontamentos(){
     
     try{
         
         const response = await axios.get(
-            `http://localhost:3000/pontos/${props.colaborador.id}`)
+            `http://localhost:3000/apontamentos/${props.colaborador.id}`)
             
-            alert("Usuários retornados com sucesso!")
-            
-            return response.data
+            apontamentos.value = response.data
             
     } catch (error){
             
@@ -30,32 +30,100 @@ async function carregarPontos(){
         }
     }
 
-    onMounted(() => {
-        carregarPontos()
-    })
+function formatarData(data) {
+
+    return new Date(data).toLocaleString(
+        'pt-BR',
+        {
+            dateStyle: 'short',
+            timeStyle: 'short'
+        }
+    )
+
+}
+
+
+carregarapontamentos()
+
 
 </script>
 
 <template>
 
-    <div class="container">
-        <div class="row mt-2">
-            <div class="col-md-6">
-                <div class="card-header">
-                    <div class="row">
-                        <div class="col-md-9">{{ props.colaborador.nome }}</div>
-                        <div class="col-md-3">{{ props.colaborador.idade }}</div>
-                    </div>
+    <div class="card shadow-sm border-0 mt-4 colaborador-card">
+
+        <div class="card-header bg-primary text-white">
+
+            <div class="d-flex justify-content-between align-items-center">
+
+                <div>
+                    <h5 class="mb-0">
+                        {{ colaborador.nome }}
+                    </h5>
                 </div>
-                <div class="card-body">
-                    <div>{{ props.colaborador.email }}</div>
-                    <div class="text-small">{{ props.colaborador.cpf }}</div>
-                    <div v-for="ponto in pontos" :key="ponto.id">
-                        {{ ponto.descricao }}
-                        -
-                        {{ ponto.data_hora }}
+
+                <span class="badge bg-light text-dark">
+                    {{ colaborador.idade }} anos
+                </span>
+
+            </div>
+
+        </div>
+
+        <div class="card-body">
+
+            <div class="mb-3">
+
+                <p class="mb-1">
+                    <strong>Email:</strong>
+                    {{ colaborador.email }}
+                </p>
+
+                <p class="mb-0">
+                    <strong>CPF:</strong>
+                    {{ colaborador.cpf }}
+                </p>
+
+            </div>
+
+            <hr>
+
+            <h6 class="mb-3">
+                Registros de Ponto
+            </h6>
+
+            <div
+                v-if="apontamentos.length > 0"
+                class="list-group"
+            >
+
+                <div
+                    v-for="ponto in apontamentos"
+                    :key="ponto.id"
+                    class="list-group-item"
+                >
+
+                    <div class="d-flex justify-content-between">
+
+                        <span>
+                            {{ ponto.descricao }}
+                        </span>
+
+                        <small class="text-muted">
+                            {{ formatarData(ponto.data_hora) }}
+                        </small>
+
                     </div>
+
                 </div>
+
+            </div>
+
+            <div
+                v-else
+                class="alert alert-light text-center"
+            >
+                Nenhum apontamento encontrado.
             </div>
 
         </div>
@@ -64,4 +132,36 @@ async function carregarPontos(){
 </template>
 
 <style scoped>
+
+.colaborador-card {
+    border-radius: 16px;
+    overflow: hidden;
+    transition: all 0.2s ease;
+}
+
+.colaborador-card:hover {
+    transform: translateY(-3px);
+}
+
+.card-header {
+    padding: 1rem 1.25rem;
+}
+
+.card-body {
+    background-color: #fafafa;
+}
+
+.list-group-item {
+    border: none;
+    border-bottom: 1px solid #eee;
+}
+
+.list-group-item:last-child {
+    border-bottom: none;
+}
+
+.card-footer {
+    padding: 1rem;
+}
+
 </style>
