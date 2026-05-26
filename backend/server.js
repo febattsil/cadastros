@@ -104,32 +104,85 @@ app.get('/colaboradores', (req, res) => {
 
     const { inicio, fim } = req.query
 
-    const sql = `
+    let sql = `
         SELECT
             c.id,
             c.nome,
             c.email,
             c.cpf,
+            c.idade,
+            a.id AS apontamento_id,
             a.data_hora,
             a.descricao
         FROM colaboradores c
         LEFT JOIN apontamentos a
             ON c.id = a.colaborador_id
-        WHERE (? IS NULL OR a.data_hora >= ?)
-        AND (? IS NULL OR a.data_hora <= ?)`
+    `
 
-    db.query(
-        sql,
-        [inicio, inicio, fim, fim],
-        (err, result) => {
+    const params = []
+    const filtros = []
 
-            if(err){
-                return res.status(500).json(err)
+    if(inicio){
+        filtros.push('a.data_hora >= ?')
+        params.push(inicio)
+    }
+
+    if(fim){
+        filtros.push('a.data_hora <= ?')
+        params.push(fim)
+    }
+
+    if(filtros.length){
+        sql += ' WHERE ' + filtros.join(' AND ')
+    }
+
+    sql += `
+        ORDER BY
+            c.nome,
+            a.data_hora DESC
+    `
+
+    db.query(sql, params, (err, result) => {
+
+        if(err){
+            return res.status(500).json(err)
+        }
+
+        const colaboradoresMap = {}
+
+        result.forEach(row => {
+
+            if(!colaboradoresMap[row.id]){
+
+                colaboradoresMap[row.id] = {
+                    id: row.id,
+                    nome: row.nome,
+                    email: row.email,
+                    cpf: row.cpf,
+                    idade: row.idade,
+                    apontamentos: []
+                }
+
             }
 
-            res.json(result)
-        }
-    )
+            if(row.apontamento_id){
+
+                colaboradoresMap[row.id].apontamentos.push({
+                    id: row.apontamento_id,
+                    data_hora: row.data_hora,
+                    descricao: row.descricao
+                })
+
+            }
+
+        })
+
+        res.json(
+            Object.values(colaboradoresMap)
+        )
+
+    })
+
 })
 
 app.get('/apontamentos/:colaboradorId', (req, res) => {

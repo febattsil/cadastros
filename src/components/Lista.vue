@@ -13,18 +13,31 @@ const filtros = ref({
     ordenacao: 'nome'
 })
 
-async function carregarColaboradores(){
+async function carregarColaboradores(dataInicial = '', dataFinal = ''){
 
     try{
 
-        const response = await axios.get(
-        `http://localhost:3000/colaboradores?inicio=${filtros.value.dataInicial}&fim=${filtros.value.dataFinal}`)
+        const response = await axios.get(    
+        `http://localhost:3000/colaboradores`,
+        {
+            params:
+            {
+                inicio: dataInicial,
+                fim: dataFinal,
+            }
+        })
         
         
         colaboradores.value = response.data
-        console.log('Colaboradores:', colaboradores.value)
 
-        console.log(response.data)
+        console.log(
+    JSON.stringify(
+        response.data,
+        null,
+        2
+    )
+)
+        console.log('Colaboradores:', colaboradores.value)
 
 
     } catch (error){
@@ -43,11 +56,11 @@ async function atualizarFiltros(novosFiltros){
 
     filtros.value = novosFiltros
 
-    await carregarColaboradores()
+    await carregarColaboradores(filtros.value.dataInicial, filtros.value.dataFinal)
 
 }
 
-const colaboradoresFiltrados = computed(() => {
+const colaboradoresFiltradosOuOrdenados = computed(() => {
 
     let lista = [...colaboradores.value]
 
@@ -73,10 +86,6 @@ function gerarRelatorio() {
 
 }
 
-onMounted(() => {
-    carregarColaboradores()
-})
-
 </script>
 
 <template>
@@ -86,7 +95,7 @@ onMounted(() => {
     />
 
     <div
-        v-for="colaborador in colaboradoresFiltrados"
+        v-for="colaborador in colaboradoresFiltradosOuOrdenados"
         :key="colaborador.id"
         class="col-lg-8"
     >

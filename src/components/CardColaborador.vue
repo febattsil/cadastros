@@ -1,8 +1,7 @@
 <script setup>
 
 import { defineProps } from 'vue'
-import { ref, onMounted } from 'vue'
-import axios from 'axios'
+import { ref } from 'vue'
 
 const props = defineProps({
     colaborador: {
@@ -12,23 +11,6 @@ const props = defineProps({
 })
 
 const apontamentos = ref([])
-
-async function carregarapontamentos(){
-    
-    try{
-        
-        const response = await axios.get(
-            `http://localhost:3000/apontamentos/${props.colaborador.id}`)
-            
-            apontamentos.value = response.data
-            
-    } catch (error){
-            
-            console.log('Status:', error.response?.status)
-            console.log('Dados:', error.response?.data)
-            
-        }
-    }
 
 function formatarData(data) {
 
@@ -41,10 +23,6 @@ function formatarData(data) {
     )
 
 }
-
-
-carregarapontamentos()
-
 
 </script>
 
@@ -98,23 +76,12 @@ carregarapontamentos()
             >
 
                 <div
-                    v-for="ponto in apontamentos"
+                    v-for="ponto in colaborador.apontamentos[0]"
                     :key="ponto.id"
-                    class="list-group-item"
                 >
-
-                    <div class="d-flex justify-content-between">
-
-                        <span>
-                            {{ ponto.descricao }}
-                        </span>
-
-                        <small class="text-muted">
-                            {{ formatarData(ponto.data_hora) }}
-                        </small>
-
-                    </div>
-
+                    {{ ponto.descricao }}
+                    -
+                    {{ formatarData(ponto.data_hora) }}
                 </div>
 
             </div>
