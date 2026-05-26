@@ -1,3 +1,15 @@
+# Configuraçoes de MySQL
+
+- Após instalar o Mysql, através de arquivo, ir ao terminal e digitar 'mysql -u root' para iniciá-lo. (Caso tenha configurado permissão ao mysql, adicionar '-p' e digitar a senha.
+
+# ativar o backend
+
+- acessar o diretório '/backend' do projeto, pelo comando 'cd backend'. (Tendo o node instalado) Digitar 'node server.js': server.js é o nome do arquivo que faz as requisiçoes de colaborador e usuario. o backend será na porta 3000 do localhost.
+
+# ativar o Vue.
+
+- entrar em nova janela e digitar 'npm run dev' para rodar o front no localhost:5173 (pode mudar).
+
 # cadastros
 
 This template should help get you started developing with Vue 3 in Vite.
